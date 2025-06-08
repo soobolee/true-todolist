@@ -1,46 +1,48 @@
 'use client'
 
-import {JSX, useState} from 'react'
-import TodoItem, {TodoItemProps} from '@/app/_components/item/TodoItem'
+import {JSX} from 'react'
+import TodoItem from '@/app/_components/item/TodoItem'
 import TodoForm from '@/app/_components/form/TodoForm'
-
-type Todo = Omit<TodoItemProps, 'onToggle'>
+import {useTodos} from '@/app/_context/TodoContext'
+import {apiTodo} from '@/app/_api/todo/router'
 
 const Todo = (): JSX.Element => {
-  const [todos, setTodos] = useState<Todo[]>([
-    {
-      id: 'todo_202506040001',
-      title: '회의 준비',
-      description: 'test',
-      date: '2025-06-04',
-      checked: true,
-    },
-    {
-      id: 'todo_202506040002',
-      title: '보고서 작성',
-      description: 'test',
-      date: '2025-06-04',
-      checked: false,
-    },
-  ])
+  const {todos, refreshTodos} = useTodos()
 
-  const toggleCheck = (id: string): void => {
-    setTodos((prev: Todo[]): Todo[] =>
-      prev.map((todo: Todo): Todo => (todo.id === id ? {...todo, checked: !todo.checked} : todo)),
-    )
+  const toggleCheck = async (todoIdx: number, checked: boolean): Promise<void> => {
+    const todo = todos.find(todo => todo.todoIdx === todoIdx)
+    if (!todo) return
+
+    const result = await apiTodo().updateTodoContent(todoIdx, {
+      ...todo,
+      checked: !checked,
+    })
+
+    if (result) await refreshTodos()
+  }
+
+  const handleDelete = async (todoIdx: number): Promise<void> => {
+    const result = await apiTodo().updateTodoDeleted(todoIdx)
+
+    if (result) await refreshTodos()
   }
 
   return (
     <section className={'w-full md:w-1/2 bg-white rounded-2xl shadow p-4'}>
       <h2 className={'center text-xl font-bold mb-4'}>오늘의 일정</h2>
-      <ul className={'space-y-2'}>
+      <ul className={'space-y-2 h-100 overflow-y-scroll'}>
         {todos.map(
-          (todo: Todo): JSX.Element => (
-            <TodoItem key={todo.id} {...todo} onToggle={toggleCheck} />
+          (todo): JSX.Element => (
+            <TodoItem
+              key={todo.todoIdx}
+              {...todo}
+              onToggle={() => toggleCheck(todo.todoIdx, todo.checked)}
+              onDelete={() => handleDelete(todo.todoIdx)}
+            />
           ),
         )}
       </ul>
-      <TodoForm />
+      <TodoForm onTodoAdded={refreshTodos} />
     </section>
   )
 }

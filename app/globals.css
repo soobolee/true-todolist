@@ -13,3 +13,7 @@
 .center {
   @apply flex items-center justify-center;
 }
+
+button, input[type="submit"], input[type="button"], input[type="checkbox"] {
+  cursor: pointer;
+}
