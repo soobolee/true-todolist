@@ -14,8 +14,10 @@ const TodoModal = ({date, isOpen, onCloseModal}: TodoModalProps) => {
   const [todos, setTodos] = useState<TodoDto[]>([])
 
   const fetchTodos = async () => {
-    const res = await apiTodo().findByDate(date)
-    if (res) setTodos(res)
+    const selectedDate = date.includes('T') ? date.split('T')[0] : date
+
+    const res = await apiTodo().findByAll({page: 0, size: 1000}, {date: selectedDate})
+    if (res) setTodos(res.content || [])
   }
 
   useEffect(() => {

@@ -16,11 +16,13 @@ export const TodoProvider = ({children}: {children: ReactNode}): JSX.Element => 
   const [allTodos, setAllTodos] = useState<TodoDto[]>([])
 
   const refreshTodos = async () => {
-    const res = await apiTodo().findByDate(new Date().toLocaleDateString('sv-SE'))
-    const resAll = await apiTodo().findByAll()
+    const today = new Date().toLocaleDateString('sv-SE')
 
-    if (res) setTodos(res)
-    if (resAll) setAllTodos(resAll)
+    const resByDate = await apiTodo().findByAll({page: 0, size: 1000}, {date: today})
+    const resAll = await apiTodo().findByAll({page: 0, size: 1000})
+
+    if (resByDate) setTodos(resByDate.content || [])
+    if (resAll) setAllTodos(resAll.content || [])
   }
 
   useEffect(() => {
